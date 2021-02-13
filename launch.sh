@@ -4,21 +4,19 @@
 # originalInputName="facebook_data.dat"
 
 mergeOutputParts() {
-  cat output/part-* > output/all.dat
+  hadoop fs -cat output/part-* > output/all.dat
 }
 
 startHadoop() {
-  hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-2.8.1.jar -input data/$nextInputName -output output -file python/mapper.py -mapper mapper.py -file python/reducer.py -reducer reducer.py
+  hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-2.10.1.jar -input data/$nextInputName -output output -file python/mapper.py -mapper mapper.py -file python/reducer.py -reducer reducer.py
   # mv output/part-* data/input$i
   # mv output/part-* "data/input$i.dat"
   mergeOutputParts
-  mv "output/all.dat" "data/result$i.dat"
-  rm -rf output/*
-  rm -rf output/.*
-  rmdir output
+  hadoop fs -copyFromLocal output/all.dat data/result$i.dat
+  hadoop fs -rm -r output
   if [ $nextInputName != $originalInputName ]
   then
-    rm data/$nextInputName
+   hadoop fs -rm data/$nextInputName
   fi
   nextInputName="result$i.dat"
   echo "END"
